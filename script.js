@@ -773,17 +773,17 @@ Microsoft-এর অফিসিয়াল Activation Key, ইমেইলে ড
         function setupImageLoading() { document.querySelectorAll('img.image-fade-in').forEach(img => setupSingleImageLoading(img)); }
 
         function setupEventListeners() {
-            if (domElements.cartIcon) { domElements.cartIcon.addEventListener('click', () => { navigateTo('cart.html'); }); }
+            if (domElements.cartIcon) { domElements.cartIcon.addEventListener('click', () => { window.location.href = 'cart.html'; }); }
             if (domElements.cartClose) { domElements.cartClose.addEventListener('click', () => { domElements.cartModal.style.display = 'none'; }); }
-            if (domElements.checkoutBtnCart) { domElements.checkoutBtnCart.addEventListener('click', () => { if (cart.length === 0) { showToast('Your cart is empty! Cannot proceed to checkout.', 'error'); return; } domElements.cartModal.style.display = 'none'; navigateTo('checkout.html'); }); }
+            if (domElements.checkoutBtnCart) { domElements.checkoutBtnCart.addEventListener('click', () => { if (cart.length === 0) { showToast('Your cart is empty! Cannot proceed to checkout.', 'error'); return; } domElements.cartModal.style.display = 'none'; window.location.href = 'checkout.html'; }); }
             window.addEventListener('click', (event) => { if (domElements.cartModal && event.target === domElements.cartModal) { domElements.cartModal.style.display = 'none'; } });
             if (domElements.contactFabMain) { domElements.contactFabMain.addEventListener('click', (e) => { e.stopPropagation(); domElements.fabContainer.classList.toggle('active'); }); }
             document.addEventListener('click', (e) => { if (domElements.fabContainer && !domElements.fabContainer.contains(e.target) && domElements.fabContainer.classList.contains('active')) { domElements.fabContainer.classList.remove('active'); } });
             if (domElements.menuIcon) domElements.menuIcon.addEventListener('click', openOffCanvasMenu);
             if (domElements.offCanvasClose) domElements.offCanvasClose.addEventListener('click', closeOffCanvasMenu);
             if (domElements.offCanvasOverlay) domElements.offCanvasOverlay.addEventListener('click', closeOffCanvasMenu);
-            if (domElements.allProductsIcon) { domElements.allProductsIcon.addEventListener('click', () => navigateTo('products', 'all')); }
-            if (domElements.ordersIcon) { domElements.ordersIcon.addEventListener('click', () => navigateTo('orders')); }
+            if (domElements.allProductsIcon) { domElements.allProductsIcon.addEventListener('click', () => { window.location.href = 'products.html'; }); }
+            if (domElements.ordersIcon) { domElements.ordersIcon.addEventListener('click', () => { window.location.href = 'orders.html'; }); }
             window.addEventListener('resize', () => { updateBodyClassForSearchVisibility(currentPage); if (currentPage === 'home') { showGuaranteedSkeletonForHomepage(); displayActualContent(); } if (window.innerWidth > 768 && document.body.classList.contains('show-mobile-search')) { document.body.classList.remove('show-mobile-search'); } });
             if (domElements.desktopSearchButton && domElements.searchInput) { domElements.desktopSearchButton.addEventListener('click', () => { handleSearch(domElements.searchInput.value); }); }
             if (domElements.searchInput) { domElements.searchInput.addEventListener('keypress', function(event) { if (event.key === 'Enter') { event.preventDefault(); handleSearch(this.value); } }); }
@@ -878,97 +878,6 @@ Microsoft-এর অফিসিয়াল Activation Key, ইমেইলে ড
             if (pageName.endsWith('.html')) {
                 window.location.href = pageName;
                 return;
-            }
-            if (!domElements.pages[pageName] && pageName !== 'product') {
-                console.warn(`Non-existent page "${pageName}". Defaulting home.`);
-                showToast(`Content for "${pageName}" not found.`, 'info');
-                pageName = 'home'; context = null; searchTerm = null;
-            }
-
-            if (pageName === 'checkout' && cart.length === 0 && !triggeredByUIAction) {
-                showToast("Cart is empty. Add products to checkout.", 'error');
-                const redirectPage = 'products'; const redirectContext = 'all';
-                navigateToWithoutHistory(redirectPage, redirectContext);
-                let newRedirectHash = `#${redirectPage}`;
-                if (redirectContext) newRedirectHash += `/${redirectContext}`;
-                if (history.replaceState) {
-                    history.replaceState({ page: redirectPage, context: redirectContext, searchTerm: null }, null, newRedirectHash);
-                } else {
-                    window.location.hash = newRedirectHash;
-                }
-                currentPage = redirectPage;
-                currentNavigationContext = { id: redirectContext, searchTerm: null };
-                return;
-            }
-
-            const targetHash = `#${pageName}${context ? '/' + context : ''}${(searchTerm && searchTerm.trim() !== "") ? '?search=' + encodeURIComponent(searchTerm.trim()) : ''}`;
-            const currentSimpleHash = `#${currentPage}${currentNavigationContext?.id ? '/' + currentNavigationContext.id : ''}${(currentNavigationContext?.searchTerm && currentNavigationContext.searchTerm.trim() !== "") ? '?search=' + encodeURIComponent(currentNavigationContext.searchTerm.trim()) : ''}`;
-            if ((currentSimpleHash !== targetHash || initialLoadPending) && !(currentPage === 'home' && pageName === 'home' && !context && !searchTerm)) {
-                let currentSearchForHistory = null;
-                if(window.innerWidth > 768 && domElements.searchInput) {
-                    currentSearchForHistory = domElements.searchInput.value;
-                } else if (window.innerWidth <= 768 && document.body.classList.contains('show-mobile-search') && domElements.mobileSearchInput) {
-                    currentSearchForHistory = domElements.mobileSearchInput.value;
-                }
-                if (!initialLoadPending) {
-                    navigationHistory.push({ page: currentPage, context: currentNavigationContext?.id, searchTerm: currentSearchForHistory });
-                    if (navigationHistory.length > 10) navigationHistory.shift();
-                }
-            }
-            if (pageName === 'home') { startGuaranteedSkeletonDisplay(); }
-
-            currentPage = pageName === 'product' ? 'productDetail' : pageName;
-            currentNavigationContext = { id: context, searchTerm: searchTerm };
-
-            let newHash = `#${pageName}`;
-            if (context) newHash += `/${context}`;
-            if (searchTerm && searchTerm.trim() !== "") newHash += `?search=${encodeURIComponent(searchTerm.trim())}`;
-
-            if (pageName === 'home' && !context && !(searchTerm && searchTerm.trim() !== "")) {
-                newHash = history.pushState ? (window.location.pathname + window.location.search) : '#';
-            }
-
-            if ( (pageName === 'home' && newHash === (window.location.pathname + window.location.search) && window.location.hash === "") ) {
-                // No change needed
-            } else if (window.location.hash !== newHash.replace(window.location.pathname + window.location.search, '') || (newHash.startsWith('#') && window.location.hash !== newHash) || (pageName === 'home' && history.pushState) ) {
-                try {
-                    if (history.pushState) {
-                        history.pushState({ page: pageName, context: context, searchTerm: searchTerm }, null, newHash);
-                    } else {
-                        window.location.hash = newHash.startsWith('#') ? newHash : '#';
-                    }
-                } catch (e) {
-                    console.warn("URL change failed:", e);
-                    window.location.hash = newHash.startsWith('#') ? newHash : '#';
-                }
-            }
-
-            if (pageName === 'product' && context) {
-                 let product = getProductBySlug(...context.split('/'));
-                 if (!product && (allProductsData.length === 0 || initialLoadPending)) {
-                     await fetchProducts(true);
-                     product = getProductBySlug(...context.split('/'));
-                 }
-                 if(product) {
-                    navigateToWithoutHistory(pageName, context, searchTerm);
-                 } else {
-                    showToast(`Product details unavailable.`, 'error critical');
-                    navigateTo('products', 'all');
-                    return;
-                 }
-            } else {
-                navigateToWithoutHistory(pageName, context, searchTerm);
-            }
-
-            if (pageName === 'orders') {
-                markAllOrdersAsViewed();
-            }
-            if (pageName === 'home') {
-                if (!allProductsData || allProductsData.length === 0) {
-                    await fetchProducts();
-                } else {
-                    displayActualContent();
-                }
             }
         }
 
@@ -1105,25 +1014,6 @@ Microsoft-এর অফিসিয়াল Activation Key, ইমেইলে ড
             const copyButton = document.getElementById('copy-payment-number'); if (copyButton) { copyButton.addEventListener('click', function() { const numberTextElement = document.getElementById('payment-number-text'); if (numberTextElement) { const numberToCopy = numberTextElement.textContent; navigator.clipboard.writeText(numberToCopy).then(() => { showToast('Number copied!', 'success'); }, () => { showToast('Copy failed.', 'error'); }); } }); }
         }
 
-        function handleHashChange(isInitialLoad = false) {
-            const hash = window.location.hash.substring(1); if (!hash) { if (currentPage !== 'home' || isInitialLoad) { navigateTo('home', null, null, false); } return; }
-            const hashParts = hash.split('?'); const pathParts = hashParts[0].split('/'); const pageName = pathParts[0]; const context = pathParts.slice(1).join('/'); let searchTerm = null;
-            if (hashParts.length > 1) { const queryParams = new URLSearchParams(hashParts[1]); searchTerm = queryParams.get('search'); }
-
-            const validPages = ['home', 'products', 'product', 'cart', 'checkout', 'orderConfirmation', 'about', 'orders', 'terms', 'privacy', 'refund'];
-
-            if (!validPages.includes(pageName)) {
-                console.warn(`Page "${pageName}" from hash not found.`); showToast(`Content for "${pageName}" not found.`, 'info');
-                navigateTo('home', null, null, false);
-                if (history.replaceState) { history.replaceState({ page: 'home', context: null, searchTerm: null }, null, '#home'); } else { window.location.hash = '#home'; }
-                return;
-            }
-
-            if (isInitialLoad || currentPage !== (pageName === 'product' ? 'productDetail' : pageName) || currentNavigationContext?.id !== context || currentNavigationContext?.searchTerm !== searchTerm) {
-                navigateTo(pageName, context || null, searchTerm, false);
-            }
-        }
-
         function updateBottomNavActiveState(activePage) {
             const bottomNavItems = document.querySelectorAll('.bottom-nav-item');
             bottomNavItems.forEach(item => { item.classList.remove('active'); if (item.dataset.page === activePage || (activePage === 'productDetail' && item.dataset.page === 'products') || (activePage === 'cart' && item.dataset.page === 'products') ) { item.classList.add('active'); } });
@@ -1135,8 +1025,29 @@ Microsoft-এর অফিসিয়াল Activation Key, ইমেইলে ড
             loadCartFromLocalStorage();
             loadOrdersFromLocalStorage();
             await fetchProducts(true);
-            handleHashChange(true);
+
+            const pageName = window.location.pathname.split("/").pop();
+            if (pageName === 'products.html') {
+                const urlParams = new URLSearchParams(window.location.search);
+                const category = urlParams.get('category');
+                const searchTerm = urlParams.get('search');
+                filterProducts(category || 'all', searchTerm);
+            } else if (pageName === 'product-detail.html') {
+                const urlParams = new URLSearchParams(window.location.search);
+                const productId = urlParams.get('id');
+                if (productId) {
+                    showProductDetail(productId);
+                }
+            } else if (pageName === 'cart.html') {
+                updateCartPage();
+            } else if (pageName === 'checkout.html') {
+                updateCheckoutPageOrderSummary();
+            } else if (pageName === 'orders.html') {
+                displayOrdersPage();
+            } else if (pageName === 'index.html' || pageName === '') {
+                populateFeaturedProducts();
+            }
+
             updateOrdersNotification();
-            window.addEventListener('hashchange', () => handleHashChange(false));
         });
         // --- END OF FILE script.js ---
