@@ -879,6 +879,27 @@ Microsoft-এর অফিসিয়াল Activation Key, ইমেইলে ড
                 window.location.href = pageName;
                 return;
             }
+
+            const state = { page: pageName, context: context, searchTerm: searchTerm };
+            let url = `#/${pageName}`;
+            if (context) {
+                url += `/${context}`;
+            }
+            if (searchTerm) {
+                url += `?search=${encodeURIComponent(searchTerm)}`;
+            }
+
+            if (triggeredByUIAction || !navigationHistory.length) {
+                try {
+                    history.pushState(state, '', url);
+                    navigationHistory.push(url);
+                } catch (e) {
+                    console.error("History pushState error:", e);
+                    window.location.hash = url;
+                }
+            }
+
+            navigateToWithoutHistory(pageName, context, searchTerm);
         }
 
         function renderProductCard(product, isFeaturedCard = false) {
