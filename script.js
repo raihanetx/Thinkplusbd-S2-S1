@@ -773,9 +773,9 @@ Microsoft-এর অফিসিয়াল Activation Key, ইমেইলে ড
         function setupImageLoading() { document.querySelectorAll('img.image-fade-in').forEach(img => setupSingleImageLoading(img)); }
 
         function setupEventListeners() {
-            if (domElements.cartIcon) { domElements.cartIcon.addEventListener('click', () => { navigateTo('cart'); }); }
+            if (domElements.cartIcon) { domElements.cartIcon.addEventListener('click', () => { navigateTo('cart.html'); }); }
             if (domElements.cartClose) { domElements.cartClose.addEventListener('click', () => { domElements.cartModal.style.display = 'none'; }); }
-            if (domElements.checkoutBtnCart) { domElements.checkoutBtnCart.addEventListener('click', () => { if (cart.length === 0) { showToast('Your cart is empty! Cannot proceed to checkout.', 'error'); return; } domElements.cartModal.style.display = 'none'; navigateTo('checkout', null, null, true); }); }
+            if (domElements.checkoutBtnCart) { domElements.checkoutBtnCart.addEventListener('click', () => { if (cart.length === 0) { showToast('Your cart is empty! Cannot proceed to checkout.', 'error'); return; } domElements.cartModal.style.display = 'none'; navigateTo('checkout.html'); }); }
             window.addEventListener('click', (event) => { if (domElements.cartModal && event.target === domElements.cartModal) { domElements.cartModal.style.display = 'none'; } });
             if (domElements.contactFabMain) { domElements.contactFabMain.addEventListener('click', (e) => { e.stopPropagation(); domElements.fabContainer.classList.toggle('active'); }); }
             document.addEventListener('click', (e) => { if (domElements.fabContainer && !domElements.fabContainer.contains(e.target) && domElements.fabContainer.classList.contains('active')) { domElements.fabContainer.classList.remove('active'); } });
@@ -791,6 +791,22 @@ Microsoft-এর অফিসিয়াল Activation Key, ইমেইলে ড
             if (domElements.mobileBoxSearchButton && domElements.mobileSearchInput) { domElements.mobileBoxSearchButton.addEventListener('click', () => { handleSearch(domElements.mobileSearchInput.value); }); }
             if (domElements.mobileSearchInput) { domElements.mobileSearchInput.addEventListener('keypress', function(event) { if (event.key === 'Enter') { event.preventDefault(); handleSearch(this.value); this.blur(); } }); }
             if (domElements.checkoutForm) { domElements.checkoutForm.addEventListener('submit', (event) => { event.preventDefault(); placeOrder(); }); }
+            const applyCouponBtn = document.getElementById('applyCouponBtn');
+            if (applyCouponBtn) {
+                applyCouponBtn.addEventListener('click', () => {
+                    const couponInput = document.getElementById('coupon');
+                    const couponCode = couponInput.value.trim().toUpperCase();
+                    if (couponCode === 'DISCOUNT10') {
+                        showToast('Coupon applied successfully! 10% discount has been added.', 'success');
+                        // Apply discount
+                        let total = cart.reduce((sum, item) => sum + (parseFloat(item.price) * (item.quantity || 1)), 0);
+                        total *= 0.9;
+                        domElements.orderTotalCheckout.textContent = `৳${total.toFixed(2)}`;
+                    } else {
+                        showToast('Invalid coupon code.', 'error');
+                    }
+                });
+            }
             setupEnglishCheckoutForm();
             setupImageLoading();
         }
